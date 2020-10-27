@@ -42,6 +42,25 @@ bootloader will jump to this position once the kernel has been loaded. It
 doesn't make sense to return from this function as the bootloader is gone.
 */
 .section .text
+
+.global _gdt_flush     
+.extern _gp            
+_gdt_flush:
+    lgdt (_gp)        
+    mov %ax, 0x10      
+    mov %ds, %ax
+    mov %es, %ax
+    mov %fs, %ax
+    mov %gs, %ax
+    mov %ss, %ax
+    ret
+
+.global _idt_set
+.extern _idtr
+_idt_set:
+	lidt (_idtr)
+	ret
+
 .global _start
 .type _start, @function
 _start:
@@ -76,14 +95,6 @@ _start:
 	runtime support to work as well.
 	*/
 
-	/* TODO
-
-	LGDT
-	LIDT
-
-
-	
-	*/
 
 	/*
 	Enter the high-level kernel. The ABI requires the stack is 16-byte
@@ -94,7 +105,7 @@ _start:
 	preserved and the call is well defined.
 	*/
 
-
+	call kernel_main
 
 	/*
 	If the system has nothing more to do, put the computer into an
