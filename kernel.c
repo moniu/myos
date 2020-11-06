@@ -7,6 +7,8 @@
 #include "gdt.c"
 #include "idt.c"
 
+
+
 void kernel_main(void) 
 {
 	terminal_initialize();
@@ -27,10 +29,15 @@ void kernel_main(void)
 	terminal_writestring("  >  printf\n");
 
 	terminal_writestring("Obecnie pracuje nad:\n");
-	terminal_writestring("  >  Tablica deskryptorow -- jest ustawiona, nie wiem jak sprawdzic czy dziala\n");
-	terminal_writestring("  >  Tablica przerwan -- jest ustawiona, trzeba napisac jakies rutyny \n");
+	terminal_writestring("  >  Tablica deskryptorow (chyba dziala, pomogl @hry)\n");
+	terminal_writestring("  >  Tablica przerwan (chyba dziala, trzeba napisac rutyny)\n");
 
-	terminal_writestring("\n\nPozdrawiam");
+	terminal_writestring("\n\nPozdrawiam\n");
 
-	
+	asm("cli");
+	gdt_setup();
+	terminal_writestring("GDT_DONE\n");
+	idt_setup();
+	terminal_writestring("IDT_DONE\n");
+	asm("sti");
 }

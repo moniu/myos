@@ -19,6 +19,14 @@ void* memcpy(void* dest, const void * src, size_t size)
     return dest;
 }
 
+void* memset(void* dest, const int value, size_t size)
+{
+    unsigned int i;
+    for (i=0;i<size;i++)
+        ((char*)dest)[i] = value;
+    return dest;
+}
+
 char* strcpy(char* dest, const char* src)
 {
     if (dest==NULL || src==NULL)

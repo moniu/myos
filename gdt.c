@@ -1,11 +1,11 @@
 #include <stdint.h>
 #include "gdt.h"
 
-struct gdt_entry gdt[3];
+unsigned long long gdt[5];
 struct gdt_ptr _gp;
 
-extern void _gdt_flush();
-
+extern void _gdt_flush(struct gdt_ptr* ptr);
+/*
 void gdt_make_entry(struct gdt_entry *gdt, uint32_t limit, uint32_t base, uint8_t access, uint8_t granularity)
 {
     gdt->base_low = (base & 0xFFFF);
@@ -16,18 +16,38 @@ void gdt_make_entry(struct gdt_entry *gdt, uint32_t limit, uint32_t base, uint8_
     gdt->granularity = ((limit >> 16) & 0x0F) | (granularity & 0xF0);
 
     gdt->access = access;
-
 }
 
 void gdt_setup()
 {
-    _gp.limit = (sizeof(struct gdt_entry) * 3) - 1;
-    _gp.base = (uint32_t)&gdt;
+    _gp.limit = sizeof(gdt);
+    _gp.base = (uint32_t)(gdt);
 
     gdt_make_entry(gdt+0,0,0,0,0); //NULL
-    gdt_make_entry(gdt+1,0,0xFFFFFFFF,0x9A,0xCF); //CODE
-    gdt_make_entry(gdt+2,0,0xFFFFFFFF,0x92,0xCF); //DATA
+    gdt_make_entry(gdt+1,0,0xFFFFFFFF,0x9A,0xCF); //KERNEL CODE
+    gdt_make_entry(gdt+2,0,0xFFFFFFFF,0x92,0xCF); //KERNEL DATA
+    gdt_make_entry(gdt+3,0,0xFFFFFFFF,0xFA,0xCF); //USER DATA
+    gdt_make_entry(gdt+4,0,0xFFFFFFFF,0xF2,0xCF); //USER DATA
 
-    _gdt_flush();
+    terminal_writestring("GDT");
+    _gdt_flush(&_gp);
+    terminal_writestring("GDT");
 
+}
+
+*/
+
+void gdt_setup()
+{
+    _gp.limit = sizeof(gdt);
+    _gp.base = (uint32_t)(gdt);
+
+    gdt[0] = 0x0000000000000000;
+    gdt[1]=0x00CF9A000000FFFF;
+    gdt[2]=0x00CF92000000FFFF;
+    gdt[3]=0x00CFFA000000FFFF;
+    gdt[4]=0x00CFF2000000FFFF;
+    _gdt_flush(&_gp);
+
+    
 }

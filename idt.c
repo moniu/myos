@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "idt.h"
+#include "string.h"
 
 struct idt_gate idt[256];
 struct idt_idtr _idtr;
@@ -20,6 +21,7 @@ void idt_setup(void)
     _idtr.limit = (sizeof(struct idt_gate ) * 256) - 1;
     _idtr.base = (uint32_t)&idt;
 
+    memset(idt,0,sizeof(struct idt_gate)*256);
     //Tutaj chyba można umieszczać wpisy do tablicy
 
     _idt_set();
