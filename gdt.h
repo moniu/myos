@@ -19,7 +19,7 @@ struct gdt_ptr
 	uint32_t base;
 } __attribute__((packed));
 
-void gdt_make_entry(struct gdt_entry *gdt, uint32_t limit, uint32_t base, uint8_t access, uint8_t granularity);
+void gdt_make_entry(struct gdt_entry *gdt, uint32_t base, uint32_t limit, uint8_t access, uint8_t granularity);
 void gdt_setup(void);
 
 

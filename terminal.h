@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#indluce "irq.h"
+
 /* Hardware text mode color constants. */
 enum vga_color {
 	VGA_COLOR_BLACK = 0,
@@ -53,8 +55,8 @@ void terminal_putchar(char c);
  
 void terminal_write(const char* data, size_t size);
 void terminal_writestring(const char* data);
+void terminal_writestring_c(const char* data, enum vga_color color);
 void terminal_scroll(void);
-
 
 
 #endif

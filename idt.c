@@ -2,27 +2,29 @@
 #include "idt.h"
 #include "string.h"
 
-struct idt_gate idt[256];
-struct idt_idtr _idtr;
 
-extern void _idt_set(void);
 
-void idt_make_entry(struct idt_gate *idt, uint32_t offset, uint16_t selector, uint8_t type_attr)
+extern void _idt_set(struct idt_idtr idtr);
+
+void idt_make_entry(struct idt_gate *idt_ent, uint32_t offset, uint16_t selector, uint8_t type_attr)
 {
-    idt->offset_low = (offset & 0xFFFF);
-    idt->offset_high = (offset >> 16) &0xFFFF;
+    idt_ent->offset_low = (offset & 0xFFFF);
+    idt_ent->offset_high = (offset >> 16) & 0xFFFF;
 
-    idt->selector = selector;
-    idt->type_attr = type_attr;
-    idt->zero = 0x00;
+    idt_ent->selector = selector;
+    idt_ent->type_attr = type_attr;
+    idt_ent->zero = 0x00;
 }
 void idt_setup(void)
 {
+    terminal_writestring("IDT :: STARTING SETUP\n");
     _idtr.limit = (sizeof(struct idt_gate ) * 256) - 1;
     _idtr.base = (uint32_t)&idt;
 
     memset(idt,0,sizeof(struct idt_gate)*256);
-    //Tutaj chyba można umieszczać wpisy do tablicy
+    terminal_writestring("IDT :: COMMITING CHANGES\n");
 
-    _idt_set();
+    _idt_set(_idtr);
+
+    terminal_writestring("IDT :: SETUP COMPLETED\n");
 }

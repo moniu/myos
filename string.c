@@ -64,6 +64,14 @@ char* itoa(char *dest, int number)
     if (dest==NULL)
         return NULL;
     
+    if (number==0)
+    {
+        dest[0]='0';
+        dest[1]='\0';
+        return dest;
+    }
+
+
     int i;
     char c;
     char is_neg = number<0;

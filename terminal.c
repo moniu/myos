@@ -5,6 +5,9 @@
 
 void terminal_initialize(void) 
 {
+
+    outportb(0x3D4, 0x0A);
+	outportb(0x3D5, 0x20);
 	terminal_row = 0;
 	terminal_column = 0;
 	terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
@@ -64,6 +67,13 @@ void terminal_writestring(const char* data)
 {
 	terminal_write(data, strlen(data));
 }
+void terminal_writestring_c(const char* data, enum vga_color color)
+{
+    enum vga_color old = terminal_color;
+    terminal_setcolor(color);
+    terminal_writestring(data);
+    terminal_setcolor(old);
+}
 
 void terminal_scroll(void)
 {
@@ -79,3 +89,4 @@ void terminal_scroll(void)
     
     terminal_column = 0;
 }
+

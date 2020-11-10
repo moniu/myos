@@ -1,12 +1,12 @@
 #include <stdint.h>
 #include "gdt.h"
 
-unsigned long long gdt[5];
+struct gdt_entry gdt[5];
 struct gdt_ptr _gp;
 
 extern void _gdt_flush(struct gdt_ptr* ptr);
-/*
-void gdt_make_entry(struct gdt_entry *gdt, uint32_t limit, uint32_t base, uint8_t access, uint8_t granularity)
+
+void gdt_make_entry(struct gdt_entry *gdt, uint32_t base, uint32_t limit, uint8_t access, uint8_t granularity)
 {
     gdt->base_low = (base & 0xFFFF);
     gdt->base_middle = (base >> 16) & 0xFF;
@@ -20,6 +20,7 @@ void gdt_make_entry(struct gdt_entry *gdt, uint32_t limit, uint32_t base, uint8_
 
 void gdt_setup()
 {
+    terminal_writestring("GDT :: STARTING SETUP\n");
     _gp.limit = sizeof(gdt);
     _gp.base = (uint32_t)(gdt);
 
@@ -29,25 +30,26 @@ void gdt_setup()
     gdt_make_entry(gdt+3,0,0xFFFFFFFF,0xFA,0xCF); //USER DATA
     gdt_make_entry(gdt+4,0,0xFFFFFFFF,0xF2,0xCF); //USER DATA
 
-    terminal_writestring("GDT");
+    terminal_writestring("GDT :: WRITING TO CPU\n");
     _gdt_flush(&_gp);
-    terminal_writestring("GDT");
+    terminal_writestring("GDT :: SETUP COMPLETED\n");
 
 }
 
-*/
 
+/*
 void gdt_setup()
 {
     _gp.limit = sizeof(gdt);
     _gp.base = (uint32_t)(gdt);
 
     gdt[0] = 0x0000000000000000;
-    gdt[1]=0x00CF9A000000FFFF;
-    gdt[2]=0x00CF92000000FFFF;
-    gdt[3]=0x00CFFA000000FFFF;
-    gdt[4]=0x00CFF2000000FFFF;
+    gdt[1] = 0x00CF9A000000FFFF;
+    gdt[2] = 0x00CF92000000FFFF;
+    gdt[3] = 0x00CFFA000000FFFF;
+    gdt[4] = 0x00CFF2000000FFFF;
     _gdt_flush(&_gp);
 
     
 }
+*/
