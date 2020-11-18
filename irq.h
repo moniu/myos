@@ -1,16 +1,12 @@
 #ifndef IRQ_H
-#define IRQ_H
+#define IRQ_H 
 
 #include "string.h"
 #include "idt.h"
 #include "timer.h"
 #include "keyboard.h"
 
-void *irq_routines[16] =
-{
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0
-};
+void irq_setup(void);
 
 void outportb (unsigned short _port, unsigned char _data);
 unsigned char inportb (unsigned short _port);

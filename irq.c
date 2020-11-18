@@ -1,6 +1,14 @@
 #include <stdint.h>
 #include "irq.h"
 
+void *irq_routines[16] =
+{
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0
+};
+
+extern struct idt_gate idt[256];
+
 void irq_remap(void)
 {
     // Tłumaczymy porty, ponieważ domyślna konfiguracja nie działa najlepiej w trybie chronionym

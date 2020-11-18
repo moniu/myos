@@ -1,4 +1,12 @@
-#include "timer.h"    
+#include "timer.h" 
+
+uint64_t time_ticks = 0;
+
+extern size_t terminal_row;
+extern size_t terminal_column;
+extern uint8_t terminal_color;
+extern uint16_t* terminal_buffer;
+
 void terminal_display_time(int seconds)
 {
     int old_column = terminal_column;
@@ -21,6 +29,7 @@ void terminal_display_time(int seconds)
 }
 void timer_handler(struct regs *r)
 {
+    if (r->int_no==7547) r->int_no=7547;
     time_ticks++;
     if (time_ticks%18==0)
         terminal_display_time(time_ticks/18);

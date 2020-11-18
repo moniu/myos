@@ -4,7 +4,7 @@
 struct gdt_entry gdt[5];
 struct gdt_ptr _gp;
 
-extern void _gdt_flush(struct gdt_ptr* ptr);
+
 
 void gdt_make_entry(struct gdt_entry *gdt, uint32_t base, uint32_t limit, uint8_t access, uint8_t granularity)
 {

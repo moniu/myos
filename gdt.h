@@ -1,7 +1,8 @@
 #ifndef GDT_H
-#define GDT_H
+#define GDT_H 
 
 #include <stdint.h>
+#include "terminal.h"
 
 struct gdt_entry
 {
@@ -22,6 +23,6 @@ struct gdt_ptr
 void gdt_make_entry(struct gdt_entry *gdt, uint32_t base, uint32_t limit, uint8_t access, uint8_t granularity);
 void gdt_setup(void);
 
-
+extern void _gdt_flush(struct gdt_ptr* ptr);
 
 #endif

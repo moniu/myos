@@ -1,10 +1,10 @@
 #include <stdint.h>
 #include "idt.h"
-#include "string.h"
 
 
+struct idt_gate idt[256];
+struct idt_idtr _idtr;
 
-extern void _idt_set(struct idt_idtr idtr);
 
 void idt_make_entry(struct idt_gate *idt_ent, uint32_t offset, uint16_t selector, uint8_t type_attr)
 {
