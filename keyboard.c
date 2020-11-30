@@ -1,60 +1,262 @@
 #include "keyboard.h"
 
+#define loop(x,m) x==m?0:x
+#define _KQS 32
 
 
-unsigned char kbdus[128] =
+struct keyboard_queue_t keyboard_queue;
+struct keyboard_event_t keyboard_queue_events[_KQS];
+
+struct
 {
-    0,  27, '1', '2', '3', '4', '5', '6', '7', '8',	/* 9 */
-  '9', '0', '-', '=', '\b',	/* Backspace */
-  '\t',			/* Tab */
-  'q', 'w', 'e', 'r',	/* 19 */
-  't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',	/* Enter key */
-    0,			/* 29   - Control */
-  'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';',	/* 39 */
- '\'', '`',   0,		/* Left shift */
- '\\', 'z', 'x', 'c', 'v', 'b', 'n',			/* 49 */
-  'm', ',', '.', '/',   0,				/* Right shift */
-  '*',
-    0,	/* Alt */
-  ' ',	/* Space bar */
-    0,	/* Caps lock */
-    0,	/* 59 - F1 key ... > */
-    0,   0,   0,   0,   0,   0,   0,   0,
-    0,	/* < ... F10 */
-    0,	/* 69 - Num lock*/
-    0,	/* Scroll Lock */
-    0,	/* Home key */
-    0,	/* Up Arrow */
-    0,	/* Page Up */
-  '-',
-    0,	/* Left Arrow */
-    0,
-    0,	/* Right Arrow */
-  '+',
-    0,	/* 79 - End key*/
-    0,	/* Down Arrow */
-    0,	/* Page Down */
-    0,	/* Insert Key */
-    0,	/* Delete Key */
-    0,   0,   0,
-    0,	/* F11 Key */
-    0,	/* F12 Key */
-    0,	/* All other keys are undefined */
-};	
+  uint8_t shift:1;
+  uint8_t ctrl:1;
+  uint8_t alt:1;
+} keys_pressed;
 
+void keyboard_setup()
+{
+  keyboard_queue.events = keyboard_queue_events;
+  keyboard_queue.start = 0;
+  keyboard_queue.end = 0;
+  keyboard_queue.size = _KQS;
+}
+
+void keyboard_push(struct keyboard_event_t event)
+{
+  if ( loop(keyboard_queue.end+1,_KQS) == keyboard_queue.start ) //przepełnienie
+  {
+    keyboard_queue.end = loop(keyboard_queue.end+1,_KQS);
+  }
+
+  keyboard_queue.events[keyboard_queue.start] = event;
+  keyboard_queue.start=loop(keyboard_queue.start+1,_KQS);
+}
+
+struct keyboard_event_t keyboard_pop(void)
+{
+  
+  if (keyboard_queue.end == keyboard_queue.start)
+    return (struct keyboard_event_t ){0};
+  else
+  {
+    struct keyboard_event_t returned_event;
+    returned_event = keyboard_queue.events[keyboard_queue.end];
+    keyboard_queue.end=loop(keyboard_queue.end+1,_KQS);
+    return returned_event;
+  }
+  
+}	
 
 void keyboard_handler(struct regs *r)
 {
-    unsigned char scancode;
+    uint8_t scancode;
     scancode = inportb(0x60);
-    if (scancode & 0x80) // Klawisz podniesiony
-    {
-        ;
-    }
-    else    //Klawisz wciśnięty
-    {
-        terminal_putchar(kbdus[scancode]);
-    }
+
+    struct keyboard_event_t new_event;
+    new_event.used = 1;
+    new_event.keydown = scancode<0x80;
+    new_event.key = scancode;
+    keyboard_push(new_event);
 }
 
+void keyboard_queue_handler(void (handler)(char))
+{   
+  struct keyboard_event_t event;
+  for(;;)
+  {
+    event = keyboard_pop();
+    if (!event.used)
+    {
+      break;
+    }
+    if (event.keydown)
+    {
+      switch(event.key)
+      {
+        case 0x2A:
+          keys_pressed.shift=1;
+          break;
+        case 0x1D:
+          keys_pressed.ctrl=1;
+          break;
+        case 0x38:
+          keys_pressed.alt=1;
+          break;
+
+        case 0x02:
+          handler(keys_pressed.shift?'!':'1');
+        break;
+        case 0x03:
+          handler(keys_pressed.shift?'@':'2');
+        break;
+        case 0x04:
+          handler(keys_pressed.shift?'#':'3');
+        break;
+        case 0x05:
+          handler(keys_pressed.shift?'$':'4');
+        break;
+        case 0x06:
+          handler(keys_pressed.shift?'%':'5');
+        break;
+        case 0x07:
+          handler(keys_pressed.shift?'^':'6');
+        break;
+        case 0x08:
+          handler(keys_pressed.shift?'&':'7');
+        break;
+        case 0x09:
+          handler(keys_pressed.shift?'*':'8');
+        break;
+        case 0x0A:
+          handler(keys_pressed.shift?'(':'9');
+        break;
+        case 0x0B:
+          handler(keys_pressed.shift?')':'0');
+        break;
+        case 0x0C:
+          handler(keys_pressed.shift?'_':'-');
+        break;
+        case 0x0D:
+          handler(keys_pressed.shift?'+':'=');
+        break;
+        case 0x0E:
+          handler('\b');
+        break;
+
+
+        case 0x10:
+          handler('q' - keys_pressed.shift*32);
+        break;
+        case 0x11:
+          handler('w' - keys_pressed.shift*32);
+        break;
+        case 0x12:
+          handler('e' - keys_pressed.shift*32);
+        break;
+        case 0x13:
+          handler('r' - keys_pressed.shift*32);
+        break;
+        case 0x14:
+          handler('t' - keys_pressed.shift*32);
+        break;
+        case 0x15:
+          handler('y' - keys_pressed.shift*32);
+        break;
+        case 0x16:
+          handler('u' - keys_pressed.shift*32);
+        break;
+        case 0x17:
+          handler('i' - keys_pressed.shift*32);
+        break;
+        case 0x18:
+          handler('o' - keys_pressed.shift*32);
+        break;
+        case 0x19:
+          handler('p' - keys_pressed.shift*32);
+        break;
+        case 0x1A:
+          handler(keys_pressed.shift?'{':'[');
+        break;
+        case 0x1B:
+          handler(keys_pressed.shift?'}':']');
+        break;
+        case 0x1C:
+          handler('\n');
+        break;
+
+        case 0x1E:
+          handler('a' - keys_pressed.shift*32);
+        break;
+        case 0x1F:
+          handler('s' - keys_pressed.shift*32);
+        break;
+        case 0x20:
+          handler('d' - keys_pressed.shift*32);
+        break;
+        case 0x21:
+          handler('f' - keys_pressed.shift*32);
+        break;
+        case 0x22:
+          handler('g' - keys_pressed.shift*32);
+        break;
+        case 0x23:
+          handler('h' - keys_pressed.shift*32);
+        break;
+        case 0x24:
+          handler('j' - keys_pressed.shift*32);
+        break;
+        case 0x25:
+          handler('k' - keys_pressed.shift*32);
+        break;
+        case 0x26:
+          handler('l' - keys_pressed.shift*32);
+        break;
+        case 0x27:
+          handler(';' - keys_pressed.shift);
+        break;
+        case 0x28:
+          handler(keys_pressed.shift?'"':'\'');
+        break;
+        case 0x29:
+          handler(keys_pressed.shift?'`':'~');
+        break;
+        case 0x2B:
+          handler(keys_pressed.shift?'|':'\\');
+        break;
+        case 0x2C:
+          handler('z' - keys_pressed.shift*32);
+        break;
+        case 0x2D:
+          handler('x' - keys_pressed.shift*32);
+        break;
+        case 0x2E:
+          handler('c' - keys_pressed.shift*32);
+        break;
+        case 0x2F:
+          handler('v' - keys_pressed.shift*32);
+        break;
+        case 0x30:
+          handler('b' - keys_pressed.shift*32);
+        break;
+        case 0x31:
+          handler('n' - keys_pressed.shift*32);
+        break;
+        case 0x32:
+          handler('m' - keys_pressed.shift*32);
+        break;
+        case 0x33:
+          handler(keys_pressed.shift?'<':',');
+        break;
+        case 0x34:
+          handler(keys_pressed.shift?'>':'.');
+        break;
+        case 0x35:
+          handler(keys_pressed.shift?'?':'/');
+        break;
+        case 0x39:
+          handler(' ');
+        break;
+
+        default:
+          handler(219);
+      }
+    }
+    else
+    {
+      switch(event.key)
+      {
+        case 0xAA:
+          keys_pressed.shift=0;
+          break;
+        case 0x9D:
+          keys_pressed.ctrl=0;
+          break;
+        case 0xB8:
+          keys_pressed.alt=0;
+          break;
+      }
+    }
+  }
+}
 

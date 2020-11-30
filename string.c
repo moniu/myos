@@ -34,6 +34,34 @@ char* strcpy(char* dest, const char* src)
     return memcpy(dest,src,strlen(src)+1);
 }
 
+int strcmp(const char* first, const char* second)
+{
+    char f,s;
+    while (true)
+    {
+        f = *(first++);
+        s = *(second++);
+        if (f=='\0' || s=='\0' || f!=s)
+            return f-s;
+    }
+}
+
+int strcmpwc(const char* first, const char* second)
+{
+    char f,s;
+    while (true)
+    {
+        f = *(first++);
+        s = *(second++);
+        if (f=='\0' || s=='\0' || f==' ' || s==' ' || f!=s)
+        {
+            if (f==' ') f='\0';
+            if (s==' ') s='\0';
+            return f-s;
+        }
+    }
+}
+
 char* hexdump(char *dest, const void* data, size_t size)
 {
     if (dest==NULL || data==NULL)

@@ -7,5 +7,6 @@
 
 void terminal_display_time(int seconds);
 void timer_handler(struct regs *r);
+void time_to_clock(char* dest, uint64_t t);
 
 #endif

@@ -55,5 +55,7 @@ void terminal_scroll(void);
 void terminal_clear(void);
 void terminal_newline(void);
 
+void terminal_command_putchar(char c);
+void terminal_command_execute(void);
 
 #endif
