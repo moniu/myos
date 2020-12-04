@@ -113,7 +113,7 @@ irq15:
     jmp irq_common_stub
 
 irq_common_stub:
-    pusha
+    pushad
     push ds
     push es
     push fs
@@ -132,6 +132,6 @@ irq_common_stub:
     pop fs
     pop es
     pop ds
-    popa
+    popad
     add esp, 8
     iret

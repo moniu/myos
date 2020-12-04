@@ -1,7 +1,7 @@
 #include "keyboard.h"
 
 #define loop(x,m) x==m?0:x
-#define _KQS 32
+#define _KQS 64
 
 
 struct keyboard_queue_t keyboard_queue;

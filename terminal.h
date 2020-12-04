@@ -54,6 +54,7 @@ void terminal_writestring_c(const char* data, enum vga_color color);
 void terminal_scroll(void);
 void terminal_clear(void);
 void terminal_newline(void);
+void terminal_process();
 
 void terminal_command_putchar(char c);
 void terminal_command_execute(void);

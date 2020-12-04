@@ -5,11 +5,11 @@
 #include "idt.h"
 #include "timer.h"
 #include "keyboard.h"
+#include "port.h"
 
 void irq_setup(void);
 
-void outportb (unsigned short _port, unsigned char _data);
-unsigned char inportb (unsigned short _port);
+
 void irq_install_handler(int irq, void (*handler)(struct regs *r));
 void irq_uninstall_handler(int irq);
 void _irq_handler(struct regs *r);

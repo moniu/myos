@@ -89,9 +89,11 @@ void _fault_handler(struct regs *r)
 
         terminal_writestring_c("\n>>>>> ",VGA_COLOR_RED);
         terminal_writestring_c(exception_messages[r->int_no],VGA_COLOR_LIGHT_RED);
+        printf(" >> %d << \n",r->err_code);
 
 
         terminal_writestring_c("\n>>>>> ",VGA_COLOR_RED);
         terminal_writestring_c("System halted...   \n",VGA_COLOR_LIGHT_RED);
+
     }
 }

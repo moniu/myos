@@ -27,6 +27,17 @@ void* memset(void* dest, const int value, size_t size)
     return dest;
 }
 
+void* memchr(const void* ptr, int value, size_t num)
+{
+    unsigned int i;
+    for (i=0;i<num;i++)
+    {
+        if ( ((char*)ptr)[i]==value )
+            return ptr+i;
+    }
+    return NULL;
+}
+
 char* strcpy(char* dest, const char* src)
 {
     if (dest==NULL || src==NULL)
@@ -80,14 +91,24 @@ char* hexdump(char *dest, const void* data, size_t size)
         if (tleft>=10) tleft+=55;
         else tleft+=48;
 
-        *(dest+2*i) = tleft;
-        *(dest+2*i+1) = tright;
+        *(dest+2*i) = tright;
+        *(dest+2*i+1) = tleft;
     }
-    *(dest+2*i)='\0';
+    //*(dest+2*i)='\0';
+    dest[size*2]='\0';
+
+    for(i=0;i<size;i++)
+    {
+        temp=dest[i];
+        dest[i]=dest[2*size-i-1];
+        dest[2*size-i-1]=temp;
+    }
+
+
     return dest;
 }
 
-char* itoa(char *dest, int number)
+char* itoa(char *dest, long long int number)
 {
     if (dest==NULL)
         return NULL;
@@ -131,12 +152,36 @@ char* itoa(char *dest, int number)
     return dest;
 }
 
+int atoi(const char *src)
+{
+    int i;
+    int value=0;
+    int sign=1;
+    for(i=0;;i++)
+    {
+        if (i==0 && src[0] == '-')
+        {
+            sign=-1;
+            continue;
+        }
+        if ('0'<=src[i]&&src[i]<='9')
+        {
+            value*=10;
+            value+=src[i]-'0';
+        }
+        else
+        {
+            return value*sign;
+        }
+    }
+}
+
 int printf(char *format, ...)
 {
     va_list vl;
     va_start(vl,format);
 
-    char intstring[12]; // temp do konwersji inta na stringa
+    char intstring[22]; // temp do konwersji inta na stringa
     char* stringtemp;
     int written = 0;
 
@@ -148,6 +193,17 @@ int printf(char *format, ...)
             {
                 case 'd':
                     itoa(intstring,va_arg(vl,int));
+                    terminal_writestring(intstring);
+                    written+= strlen(intstring);
+                break;
+
+                case 'h':
+                    hexdump(intstring,va_arg(vl,int),1);
+                    terminal_writestring(intstring);
+                    written+= strlen(intstring);
+                break;
+                case 'H':
+                    hexdump(intstring,va_arg(vl,int),4);
                     terminal_writestring(intstring);
                     written+= strlen(intstring);
                 break;

@@ -1,5 +1,8 @@
 #include "terminal.h"
 #include "art.c"
+#include "process.h"
+#include "timer.h"
+#include "port.h"
 
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
@@ -8,6 +11,8 @@ size_t terminal_row;
 size_t terminal_column;
 uint8_t terminal_color;
 uint16_t* terminal_buffer;
+
+char myheap[0x0010000];
 
 char command_buffer[128];
 int command_buffer_size;
@@ -23,6 +28,8 @@ void terminal_initialize(void)
 	terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 	terminal_buffer = (uint16_t*) 0xB8000;
     terminal_clear();
+
+    
 }
 
 void terminal_clear(void)
@@ -178,15 +185,71 @@ void terminal_command_execute(void)
     {
         art_pepe();
     }
-    else if (strcmpwc(command_buffer, "timer")==0)
+    else if (strcmpwc(command_buffer, "timer1")==0)
     {
-        if (clock_enabled==0)
-        {
-            terminal_writestring_c("Uruchamiam timer\n",VGA_COLOR_LIGHT_BLUE);
-            clock_enabled=1;
-        }
+        terminal_writestring_c("Uruchamiam timer 1\n",VGA_COLOR_LIGHT_BLUE);
+        if(create_process(timer1,"timer1"))
+            terminal_writestring_c("SUKCES!\n",VGA_COLOR_LIGHT_GREEN);
         else
-            terminal_writestring_c("Timer jest juz wlaczony\n",VGA_COLOR_RED);
+            terminal_writestring_c("PORAZKA!\n",VGA_COLOR_LIGHT_RED);
+
+    }
+    else if (strcmpwc(command_buffer, "timer2")==0)
+    {
+        terminal_writestring_c("Uruchamiam timer 2\n",VGA_COLOR_LIGHT_BLUE);
+        if(create_process(timer2,"timer2"))
+            terminal_writestring_c("SUKCES!\n",VGA_COLOR_LIGHT_GREEN);
+        else
+            terminal_writestring_c("PORAZKA!\n",VGA_COLOR_LIGHT_RED);
+    }
+    else if(strcmpwc(command_buffer, "processes")==0 )
+    {
+        print_processes();
+    }
+    else if (strcmpwc(command_buffer,"set")==0)
+    {
+        char *carg1 = memchr(command_buffer,' ',strlen(command_buffer));
+        if (carg1==NULL)
+        {
+            terminal_writestring_c("Niewystarczajaca liczba argumentow\n",VGA_COLOR_LIGHT_RED);
+            return;
+        }
+        carg1++;
+        int arg1 = atoi(carg1);
+        if (arg1<=0)
+        {
+            terminal_writestring_c("Nieprawidlowy argument\n", VGA_COLOR_LIGHT_RED);
+            return;
+        }
+        char *carg2 = memchr(carg1,' ',strlen(carg1));
+        if (carg2==NULL)
+        {
+            terminal_writestring_c("Niewystarczajaca liczba argumentow\n",VGA_COLOR_LIGHT_RED);
+            return;
+        }
+        carg2++;
+        int arg2 = atoi(carg2);
+
+        printf("Ustawiam komorke %d na %d\n",arg1,arg2);
+        myheap[arg1] = arg2;
+    }
+    else if (strcmpwc(command_buffer,"read")==0)
+    {
+        char *carg1 = memchr(command_buffer,' ',strlen(command_buffer));
+        if (carg1==NULL)
+        {
+            terminal_writestring_c("Niewystarczajaca liczba argumentow\n",VGA_COLOR_LIGHT_RED);
+            return;
+        }
+        carg1++;
+        int arg1 = atoi(carg1);
+        if (arg1<0)
+        {
+            terminal_writestring_c("Nieprawidlowy argument\n", VGA_COLOR_LIGHT_RED);
+            return;
+        }
+
+        printf("Wartosc komorki %d wynosi %d\n",arg1,myheap[arg1]);
     }
     else if (strcmpwc(command_buffer,"")==0);
     else
@@ -196,4 +259,11 @@ void terminal_command_execute(void)
         terminal_newline();
     }
     return;
+}
+
+void terminal_process()
+{
+    for(;;sleep(1))
+        keyboard_queue_handler(terminal_command_putchar);
+    
 }

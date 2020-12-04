@@ -193,7 +193,7 @@ isr31:
     jmp isr_common_stub
     
 isr_common_stub:
-    pusha
+    pushad
     push ds
     push es
     push fs
@@ -212,7 +212,7 @@ isr_common_stub:
     pop fs
     pop es
     pop ds
-    popa
+    popad
     add esp, 8     ; Cleans up the pushed error code and pushed ISR number
     iret           ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
 

@@ -2,6 +2,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "multiboot.h"
+
 #include "gdt.h"
 #include "idt.h"
 #include "isr.h"
@@ -11,6 +13,8 @@
 #include "keyboard.h"
 #include "timer.h"
 #include "paging.h"
+#include "process.h"
+#include "serial.h"
 
 uint64_t system_time=0;
 extern int time_ticks;
@@ -20,19 +24,19 @@ void kernel_main(void)
 	terminal_initialize();
 	terminal_setcolor(VGA_COLOR_LIGHT_GREY);
 
-	//asm("cli");
+	asm("cli");
 	gdt_setup();
 	idt_setup();
 	isr_setup();
 	irq_setup();
+	setup_processes();
 	keyboard_setup();
-	paging_setup();
-	asm("sti");
+	init_serial();
+	//paging_setup();
 
 	terminal_writestring_c("\n\n\nSystem will start soon...\n",VGA_COLOR_DARK_GREY);
 
-	while(time_ticks<10)
-		asm("hlt");
+	//sleep(180);
 	terminal_clear();
 	terminal_newline();
 	terminal_writestring_c("oooo     oooo                                     ooooooo      oooooo  \n",VGA_COLOR_LIGHT_GREEN);
@@ -44,17 +48,21 @@ void kernel_main(void)
 	terminal_newline();
 	terminal_newline();
 
+
+	create_process(terminal_process,"terminal");
 	terminal_writestring("Test konsoli:\n");
 
 	terminal_writestring_c(" user > ",VGA_COLOR_GREEN);
+	asm("sti");
 
-	int fds;
-	int tdfs;
+
+
 	while(1) // KERNEL LOOP
 	{
-		keyboard_queue_handler(terminal_command_putchar);
+		//keyboard_queue_handler(terminal_command_putchar);
 		
 		asm("hlt");
 	}
+
 	
 }

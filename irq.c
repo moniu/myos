@@ -1,5 +1,8 @@
 #include <stdint.h>
 #include "irq.h"
+#include "port.h"
+
+
 
 void *irq_routines[16] =
 {
@@ -49,6 +52,13 @@ void irq_setup()
 
     irq_routines[0] = timer_handler;
     irq_routines[1] = keyboard_handler;
+    
+    uint64_t divisor = 1193180 / 100;
+
+    outportb(0x43, 0x36);
+    outportb(0x40, (uint8_t)divisor);
+    outportb(0x40, (uint8_t)(divisor >> 8));
+
     terminal_writestring("IRQ :: SETUP COMPLETED\n");
 }
 
@@ -56,28 +66,18 @@ void _irq_handler(struct regs *r)
 {
     void (*handler)(struct regs *r);
 
-    handler = irq_routines[r->int_no - 32];
-    if (handler)
-    {
-        handler(r);
-    }
-
-
     // Zwróć odpowiedź do PIC, jeśli odpowiedź idzie do drugiego kontrolera, pierwszy też musi dostać odpowiedź
     if (r->int_no >= 40)
     {
         outportb(0xA0, 0x20);
     }
     outportb(0x20, 0x20);
+
+
+    handler = irq_routines[r->int_no - 32];
+    if (handler)
+    {
+        handler(r);
+    }
 }
 
-unsigned char inportb (unsigned short _port)
-{
-    unsigned char rv;
-    __asm__ __volatile__ ("inb %1, %0" : "=a" (rv) : "dN" (_port));
-    return rv;
-}
-void outportb (unsigned short _port, unsigned char _data)
-{
-    __asm__ __volatile__ ("outb %1, %0" : : "dN" (_port), "a" (_data));
-}
