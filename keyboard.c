@@ -1,6 +1,6 @@
 #include "keyboard.h"
 
-#define loop(x,m) x==m?0:x
+#define loop(x,m) (x==m?0:x)
 #define _KQS 64
 
 
@@ -20,36 +20,45 @@ void keyboard_setup()
   keyboard_queue.start = 0;
   keyboard_queue.end = 0;
   keyboard_queue.size = _KQS;
+  keyboard_queue.full = 0;
 }
 
 void keyboard_push(struct keyboard_event_t event)
 {
-  if ( loop(keyboard_queue.end+1,_KQS) == keyboard_queue.start ) //przepełnienie
+  if (keyboard_queue.start==keyboard_queue.end && keyboard_queue.full)
   {
-    keyboard_queue.end = loop(keyboard_queue.end+1,_KQS);
+    keyboard_queue.events[keyboard_queue.end] = event;
+    keyboard_queue.start = loop(keyboard_queue.start+1,_KQS);
+    keyboard_queue.end = keyboard_queue.start;
   }
-
-  keyboard_queue.events[keyboard_queue.start] = event;
-  keyboard_queue.start=loop(keyboard_queue.start+1,_KQS);
+  else
+  {
+    keyboard_queue.events[keyboard_queue.end] = event;
+    keyboard_queue.end = loop(keyboard_queue.end+1,_KQS);
+    if (keyboard_queue.end==keyboard_queue.start)
+      keyboard_queue.full=1;
+  }
 }
 
 struct keyboard_event_t keyboard_pop(void)
 {
   
-  if (keyboard_queue.end == keyboard_queue.start)
+  if (keyboard_queue.end == keyboard_queue.start && keyboard_queue.full==0)
     return (struct keyboard_event_t ){0};
   else
   {
     struct keyboard_event_t returned_event;
-    returned_event = keyboard_queue.events[keyboard_queue.end];
-    keyboard_queue.end=loop(keyboard_queue.end+1,_KQS);
+    returned_event = keyboard_queue.events[keyboard_queue.start];
+    keyboard_queue.start=loop(keyboard_queue.start+1,_KQS);
+    keyboard_queue.full=0;
     return returned_event;
   }
   
 }	
 
-void keyboard_handler(struct regs *r)
+void keyboard_handler(struct regs* r)
 {
+    (void)r;
     uint8_t scancode;
     scancode = inportb(0x60);
 
@@ -132,7 +141,10 @@ void keyboard_queue_handler(void (handler)(char))
           handler('w' - keys_pressed.shift*32);
         break;
         case 0x12:
-          handler('e' - keys_pressed.shift*32);
+          if (keys_pressed.alt)
+            handler(keys_pressed.shift?129:137);
+          else
+            handler('e' - keys_pressed.shift*32);
         break;
         case 0x13:
           handler('r' - keys_pressed.shift*32);
@@ -150,7 +162,10 @@ void keyboard_queue_handler(void (handler)(char))
           handler('i' - keys_pressed.shift*32);
         break;
         case 0x18:
-          handler('o' - keys_pressed.shift*32);
+          if (keys_pressed.alt)
+            handler(keys_pressed.shift?131:139);
+          else
+            handler('o' - keys_pressed.shift*32);
         break;
         case 0x19:
           handler('p' - keys_pressed.shift*32);
@@ -166,10 +181,16 @@ void keyboard_queue_handler(void (handler)(char))
         break;
 
         case 0x1E:
-          handler('a' - keys_pressed.shift*32);
+          if (keys_pressed.alt)
+            handler(keys_pressed.shift?127:135);
+          else
+            handler('a' - keys_pressed.shift*32);
         break;
         case 0x1F:
-          handler('s' - keys_pressed.shift*32);
+          if (keys_pressed.alt)
+            handler(keys_pressed.shift?132:140);
+          else
+            handler('s' - keys_pressed.shift*32);
         break;
         case 0x20:
           handler('d' - keys_pressed.shift*32);
@@ -190,7 +211,10 @@ void keyboard_queue_handler(void (handler)(char))
           handler('k' - keys_pressed.shift*32);
         break;
         case 0x26:
-          handler('l' - keys_pressed.shift*32);
+          if (keys_pressed.alt)
+            handler(keys_pressed.shift?143:144);
+          else
+            handler('l' - keys_pressed.shift*32);
         break;
         case 0x27:
           handler(';' - keys_pressed.shift);
@@ -205,13 +229,22 @@ void keyboard_queue_handler(void (handler)(char))
           handler(keys_pressed.shift?'|':'\\');
         break;
         case 0x2C:
-          handler('z' - keys_pressed.shift*32);
+          if (keys_pressed.alt)
+            handler(keys_pressed.shift?134:142);
+          else
+            handler('z' - keys_pressed.shift*32);
         break;
         case 0x2D:
-          handler('x' - keys_pressed.shift*32);
+          if (keys_pressed.alt)
+            handler(keys_pressed.shift?133:141);
+          else
+            handler('x' - keys_pressed.shift*32);
         break;
         case 0x2E:
-          handler('c' - keys_pressed.shift*32);
+          if (keys_pressed.alt)
+            handler(keys_pressed.shift?128:136);
+          else
+            handler('c' - keys_pressed.shift*32);
         break;
         case 0x2F:
           handler('v' - keys_pressed.shift*32);
@@ -220,7 +253,10 @@ void keyboard_queue_handler(void (handler)(char))
           handler('b' - keys_pressed.shift*32);
         break;
         case 0x31:
-          handler('n' - keys_pressed.shift*32);
+          if (keys_pressed.alt)
+            handler(keys_pressed.shift?130:138);
+          else
+            handler('n' - keys_pressed.shift*32);
         break;
         case 0x32:
           handler('m' - keys_pressed.shift*32);

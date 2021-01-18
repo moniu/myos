@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "isr.h"
 
-extern struct idt_gate idt[256];
+
 
 const char* exception_messages[] = {
    "0: Division by zero",

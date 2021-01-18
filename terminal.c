@@ -3,24 +3,28 @@
 #include "process.h"
 #include "timer.h"
 #include "port.h"
+#include "mutex.h"
+#include "vga.h"
+#include "graphics.h"
 
-static const size_t VGA_WIDTH = 80;
-static const size_t VGA_HEIGHT = 25;
+#include "font.c"
+
+const size_t VGA_WIDTH = VGA_SCREEN_WIDTH/FONT_WIDTH;
+const size_t VGA_HEIGHT = VGA_SCREEN_HEIGHT/FONT_HEIGHT;
 
 size_t terminal_row;
 size_t terminal_column;
 uint8_t terminal_color;
 uint16_t* terminal_buffer;
 
-char myheap[0x0010000];
+struct mutex_t terminal_mutex = {0,-1};
 
-char command_buffer[128];
+uint8_t command_buffer[128];
 int command_buffer_size;
-
-extern int clock_enabled;
 
 void terminal_initialize(void) 
 {
+
     outportb(0x3D4, 0x0A);
 	outportb(0x3D5, 0x20);
 	terminal_row = 0;
@@ -28,8 +32,6 @@ void terminal_initialize(void)
 	terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 	terminal_buffer = (uint16_t*) 0xB8000;
     terminal_clear();
-
-    
 }
 
 void terminal_clear(void)
@@ -40,8 +42,7 @@ void terminal_clear(void)
     {
 		for (size_t x = 0; x < VGA_WIDTH; x++)
         {
-			const size_t index = y * VGA_WIDTH + x;
-			terminal_buffer[index] = vga_entry(' ', terminal_color);
+			terminal_putentryat(' ',terminal_color,x,y);
 		}
 	}
 }
@@ -53,15 +54,32 @@ void terminal_setcolor(uint8_t color)
 	terminal_color = color;
 }
  
-void terminal_putentryat(char c, uint8_t color, size_t x, size_t y) 
+void terminal_putentryat(uint8_t c, uint8_t color, size_t x, size_t y) 
 {
-	const size_t index = y * VGA_WIDTH + x;
-	terminal_buffer[index] = vga_entry(c, color);
+    int xx,yy;
+
+    char bg_col = color>>4;
+    char fg_col = color&0x0F;
+
+    for(xx=0;xx<FONT_WIDTH;xx++)
+    {
+        for(yy=0;yy<FONT_HEIGHT;yy++)
+        {
+            if (font[c-32].pixels[yy][xx]-'0')
+                vga_write_pixel(x*FONT_WIDTH+xx,y*FONT_HEIGHT+yy,fg_col);
+            else
+                vga_write_pixel(x*FONT_WIDTH+xx,y*FONT_HEIGHT+yy,bg_col);
+                
+            
+        }
+    }
+
 }
  
-void terminal_putchar(char c) 
+void terminal_putchar(uint8_t c) 
 {
-    asm("cli");
+    mutex_get(&terminal_mutex);
+
     if (c=='\n')
     {
         terminal_row++;
@@ -97,7 +115,8 @@ void terminal_putchar(char c)
         terminal_column = 0;
         terminal_scroll();
     }
-    asm("sti");
+
+    mutex_free(&terminal_mutex);
 }
  
 void terminal_write(const char* data, size_t size) 
@@ -122,13 +141,18 @@ void terminal_scroll(void)
 {
     unsigned int i;
     unsigned int j;
-    for (i=0;i<VGA_HEIGHT-1;i++)
+    unsigned int k;
+    for (k=0;k<8;k++)
     {
-        for (j=0;j<VGA_WIDTH;j++)
-            terminal_buffer[i*VGA_WIDTH+j] = terminal_buffer[i*VGA_WIDTH+j+VGA_WIDTH];
+
+        for (i=0;i<VGA_SCREEN_HEIGHT-1;i++)
+        {
+            for (j=0;j<VGA_SCREEN_WIDTH;j++)
+                graphics_buffer[i*VGA_SCREEN_WIDTH+j] = graphics_buffer[i*VGA_SCREEN_WIDTH+j+VGA_SCREEN_WIDTH];
+        }
+        for (i=0;i<VGA_SCREEN_WIDTH;i++)
+            graphics_buffer[VGA_SCREEN_WIDTH*(VGA_SCREEN_HEIGHT-1) + i] = 0;
     }
-    for (i=0;i<VGA_WIDTH;i++)
-        terminal_buffer[VGA_WIDTH*(VGA_HEIGHT-1) + i] = vga_entry(' ', terminal_color);
     
     terminal_column = 0;
 }
@@ -166,22 +190,19 @@ void terminal_command_execute(void)
     if (strcmpwc(command_buffer,"help")==0)
     {
         printf("Dostepne komendy:\n");
-        printf(" help\n");
-        printf(" clr\n");
-        printf(" art\n");
-        printf(" duzepepe\n");
-        printf(" timer\n");
-        printf(" generalnie\n");
+        printf("-help\n");
+        printf("-clr\n");
+        printf("-art\n");
+        printf("-timer1(nieskonczony)\n");
+        printf("-timer2(10 s)\n");
+        printf("-processes\n");
+        printf("-qube\n");
     }
     else if (strcmpwc(command_buffer, "clr")==0)
     {
         terminal_clear();
     }
     else if (strcmpwc(command_buffer, "art")==0)
-    {
-        art_pepe2();
-    }
-    else if (strcmpwc(command_buffer, "duzepepe")==0)
     {
         art_pepe();
     }
@@ -206,56 +227,22 @@ void terminal_command_execute(void)
     {
         print_processes();
     }
-    else if (strcmpwc(command_buffer,"set")==0)
+    else if(strcmpwc(command_buffer, "qube")==0)
     {
-        char *carg1 = memchr(command_buffer,' ',strlen(command_buffer));
-        if (carg1==NULL)
+        float a=0.0f;
+        for(;a<10;)
         {
-            terminal_writestring_c("Niewystarczajaca liczba argumentow\n",VGA_COLOR_LIGHT_RED);
-            return;
+        	vga_clear();
+        	graphic_function(a+=0.1f);
+        	sleep(10);
         }
-        carg1++;
-        int arg1 = atoi(carg1);
-        if (arg1<=0)
-        {
-            terminal_writestring_c("Nieprawidlowy argument\n", VGA_COLOR_LIGHT_RED);
-            return;
-        }
-        char *carg2 = memchr(carg1,' ',strlen(carg1));
-        if (carg2==NULL)
-        {
-            terminal_writestring_c("Niewystarczajaca liczba argumentow\n",VGA_COLOR_LIGHT_RED);
-            return;
-        }
-        carg2++;
-        int arg2 = atoi(carg2);
-
-        printf("Ustawiam komorke %d na %d\n",arg1,arg2);
-        myheap[arg1] = arg2;
-    }
-    else if (strcmpwc(command_buffer,"read")==0)
-    {
-        char *carg1 = memchr(command_buffer,' ',strlen(command_buffer));
-        if (carg1==NULL)
-        {
-            terminal_writestring_c("Niewystarczajaca liczba argumentow\n",VGA_COLOR_LIGHT_RED);
-            return;
-        }
-        carg1++;
-        int arg1 = atoi(carg1);
-        if (arg1<0)
-        {
-            terminal_writestring_c("Nieprawidlowy argument\n", VGA_COLOR_LIGHT_RED);
-            return;
-        }
-
-        printf("Wartosc komorki %d wynosi %d\n",arg1,myheap[arg1]);
+        terminal_clear();
     }
     else if (strcmpwc(command_buffer,"")==0);
     else
     {
         printf("Nieznana komenda ");
-        terminal_writestring_c(command_buffer,VGA_COLOR_LIGHT_RED);
+        terminal_writestring_c((char*)command_buffer,VGA_COLOR_LIGHT_RED);
         terminal_newline();
     }
     return;
@@ -263,7 +250,7 @@ void terminal_command_execute(void)
 
 void terminal_process()
 {
-    for(;;sleep(1))
+    for(;;sleep(10))
         keyboard_queue_handler(terminal_command_putchar);
     
 }

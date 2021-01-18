@@ -31,12 +31,23 @@ align 16
 stack_bottom:
 resb 16384 ; 16 KiB
 stack_top:
+global stack_top
  
 ; The linker script specifies _start as the entry point to the kernel and the
 ; bootloader will jump to this position once the kernel has been loaded. It
 ; doesn't make sense to return from this function as the bootloader is gone.
 ; Declare _start as a function symbol with the given symbol size.
 section .text
+
+; vbe_set_mode:
+; Sets a VESA mode
+; In\	AX = Width
+; In\	BX = Height
+; In\	CL = Bits per pixel
+; Out\	FLAGS = Carry clear on success
+; Out\	Width, height, bpp, physical buffer, all set in vbe_screen structure
+ 
+
 
 %include "asm/setup.asm"
 

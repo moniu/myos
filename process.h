@@ -5,8 +5,8 @@
 
 #include "regs.h"
 
-#define STACK_SIZE 0x1000
-#define MAX_PROCESSES 16
+#define STACK_SIZE 0x2000
+#define MAX_PROCESSES 4
 
 struct process
 {
@@ -17,6 +17,7 @@ struct process
     } registers;
     uint8_t stack[STACK_SIZE];
     char name[10];
+    uint8_t id;
     uint32_t time_created;
     enum
     {
@@ -36,6 +37,10 @@ struct process* create_process(void* function, char* name);
 struct process* allocate_process();
 void switch_process(struct process* p);
 void kill_process(struct process* p);
+void kill_process_nr(int index);
+void process_end();
+
+
 
 int no_processes();
 void process_revolver(struct regs *r);

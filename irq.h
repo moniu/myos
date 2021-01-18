@@ -7,6 +7,8 @@
 #include "keyboard.h"
 #include "port.h"
 
+#define IRQ_FREQUENCY 500 
+
 void irq_setup(void);
 
 

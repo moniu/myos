@@ -4,13 +4,14 @@
 
 
 
+
 void *irq_routines[16] =
 {
     0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0
 };
 
-extern struct idt_gate idt[256];
+
 
 void irq_remap(void)
 {
@@ -53,7 +54,7 @@ void irq_setup()
     irq_routines[0] = timer_handler;
     irq_routines[1] = keyboard_handler;
     
-    uint64_t divisor = 1193180 / 100;
+    uint64_t divisor = 1193180 / IRQ_FREQUENCY;
 
     outportb(0x43, 0x36);
     outportb(0x40, (uint8_t)divisor);

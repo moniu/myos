@@ -46,12 +46,12 @@ int serial_printf(char *format, ...)
                 break;
 
                 case 'h':
-                    hexdump(intstring,va_arg(vl,int),1);
+                    hexdump(intstring,(void*)va_arg(vl,int),1);
                     print_serial(intstring);
                     written+= strlen(intstring);
                 break;
                 case 'H':
-                    hexdump(intstring,va_arg(vl,int),4);
+                    hexdump(intstring,(void*)va_arg(vl,int),4);
                     print_serial(intstring);
                     written+= strlen(intstring);
                 break;

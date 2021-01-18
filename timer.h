@@ -5,6 +5,14 @@
 #include "idt.h"
 #include "terminal.h"
 #include "process.h"
+#include "mutex.h"
+#include "irq.h"
+
+#define SECOND IRQ_FREQUENCY
+
+extern uint32_t time_ticks;
+
+
 
 void terminal_display_time(int seconds,int x, int y);
 void timer_handler(struct regs *r);

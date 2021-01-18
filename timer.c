@@ -1,6 +1,6 @@
 #include "timer.h" 
 
-volatile uint32_t time_ticks = 0;
+uint32_t time_ticks = 0;
 
 
 extern size_t terminal_row;
@@ -8,9 +8,13 @@ extern size_t terminal_column;
 extern uint8_t terminal_color;
 extern uint16_t* terminal_buffer;
 
+extern uint8_t stack_top;
+
+struct mutex_t timer_mutex = {0,-1};
+
 void terminal_display_time(int seconds,int x, int y)
 {
-    asm("cli");
+    mutex_get(&timer_mutex);
     int old_column = terminal_column;
     int old_row = terminal_row;
     enum vga_color old_color = terminal_color;
@@ -27,16 +31,13 @@ void terminal_display_time(int seconds,int x, int y)
 
     terminal_row = old_row;
     terminal_column = old_column;
-    asm("sti");
+    mutex_free(&timer_mutex);
 
 }
 void timer_handler(struct regs *r)
 {
-    if (r->int_no==7547) r->int_no=7547; // żeby pozbyć się ostrzeżenia...
+    (void)r;
     time_ticks++;
-
-    
-    
     process_revolver(r);
 
 }
@@ -65,7 +66,7 @@ void sleep(uint32_t ticks)
     uint64_t before = time_ticks+1;
     while(time_ticks<=(before+ticks))
     {
-        ;
+        asm("pause");
     }
     return;
 }
@@ -75,20 +76,23 @@ void timer1()
     uint32_t clock_ticks = 0;
     for(;;)
     {
-        sleep(100);
+        sleep(IRQ_FREQUENCY);
         clock_ticks++;
         if (clock_ticks>=3600) clock_ticks=0;
-        terminal_display_time(clock_ticks,0, 68);
+        terminal_display_time(clock_ticks,0, VGA_WIDTH-6);
     }
 }
 void timer2()
 {
     uint32_t clock_ticks = 0;
-    for(;;)
+    for(;clock_ticks<10;)
     {
-        sleep(100);
+        sleep(IRQ_FREQUENCY);
         clock_ticks++;
         if (clock_ticks>=3600) clock_ticks=0;
-        terminal_display_time(clock_ticks,1, 68);
+        terminal_display_time(clock_ticks,1, VGA_WIDTH-6);
     }
+
+    process_end();
+    
 }

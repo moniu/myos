@@ -33,7 +33,7 @@ void* memchr(const void* ptr, int value, size_t num)
     for (i=0;i<num;i++)
     {
         if ( ((char*)ptr)[i]==value )
-            return ptr+i;
+            return (char*)(ptr)+i;
     }
     return NULL;
 }
@@ -57,7 +57,7 @@ int strcmp(const char* first, const char* second)
     }
 }
 
-int strcmpwc(const char* first, const char* second)
+int strcmpwc(const unsigned char* first, const char* second)
 {
     char f,s;
     while (true)
@@ -198,12 +198,12 @@ int printf(char *format, ...)
                 break;
 
                 case 'h':
-                    hexdump(intstring,va_arg(vl,int),1);
+                    hexdump(intstring,(void*)va_arg(vl,int),1);
                     terminal_writestring(intstring);
                     written+= strlen(intstring);
                 break;
                 case 'H':
-                    hexdump(intstring,va_arg(vl,int),4);
+                    hexdump(intstring,(void*)va_arg(vl,int),4);
                     terminal_writestring(intstring);
                     written+= strlen(intstring);
                 break;

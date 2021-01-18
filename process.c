@@ -4,43 +4,11 @@
 
 #include <stdint.h>
 
-extern uint64_t time_ticks;
-
 struct process processes[MAX_PROCESSES];
 int current_process=0;
 int last_process=-1;
 
-void log_stack(struct process *p)
-{
-    int i;
-    serial_printf("\n\n\n::BEGIN::\n");
-    for (i=0;i<32;i++)
-    {
-        serial_printf("%h %h %h %h\n",p->stack[4*i+0],p->stack[4*i+1],p->stack[4*i+2],p->stack[4*i+3]);
-    }
-    serial_printf("::END::\n\n\n");
-
-}
-
-void log_regs(struct process *p)
-{
-    asm("cli");
-    serial_printf("Printing regs of process %d\n",(int)p);
-    serial_printf("EDI: %d\n", p->registers.EDI);
-    serial_printf("ESI: %d\n", p->registers.ESI);
-    serial_printf("EBP: %d\n", p->registers.EBP);
-    serial_printf("ESP: %d\n", p->registers.ESP);
-    serial_printf("EBX: %d\n", p->registers.EBX);
-    serial_printf("EDX: %d\n", p->registers.EDX);
-    serial_printf("ECX: %d\n", p->registers.ECX);
-    serial_printf("EAX: %d\n", p->registers.EAX);
-    serial_printf("CS: %d\n", p->registers.CS);
-    serial_printf("EFLAGS: %d\n", p->registers.EFLAGS);
-    serial_printf("EIP: %d\n", p->registers.EIP);
-
-    serial_printf("\n\n");
-    asm("sti");
-}
+extern uint8_t stack_top;
 
 void save_regs(struct process *p, struct regs *r)
 {
@@ -84,6 +52,7 @@ struct process* create_process(void* function,char* name)
     if (p==NULL)
     {
         serial_printf("No porazka panie...\n");
+        asm("sti");
         return NULL;
     }
 
@@ -120,7 +89,7 @@ struct process* allocate_process() // funkcja zaklepuje puste miejsce na proces
     int i;
     for (i=0;i<MAX_PROCESSES;i++)
     {
-        if (processes[i].state==free)
+        if (processes[i].state==free || processes[i].state==dead)
         {
             processes[i].state=new;
             return processes+i;
@@ -131,17 +100,17 @@ struct process* allocate_process() // funkcja zaklepuje puste miejsce na proces
 
 void switch_process(struct process* p)
 {
+    // wspomagałem się tą stroną: 
+    // http://www.osdever.net/tutorials/view/multitasking-howto
+
     p->state = running;
 
-
-    // czarna magia od @hry
-
     asm("push %0" : : "g"(p->registers.ESP));
-    asm("pop %esp"); // co?
+    asm("pop %esp");
 
     asm("push %0" : : "g"(p->registers.EFLAGS));
     asm("push %0" : : "g"(p->registers.CS));
-    asm("push %0" : : "g"(p->registers.EIP));
+    asm("push %0" : : "g"(p->registers.EIP)); // to zjada iret
 
     asm("push %0" : : "g"(p->registers.EAX));
     asm("push %0" : : "g"(p->registers.ECX));
@@ -150,7 +119,7 @@ void switch_process(struct process* p)
     asm("push %0" : : "g"(p->registers.ESP));
     asm("push %0" : : "g"(p->registers.EBP));
     asm("push %0" : : "g"(p->registers.ESI));
-    asm("push %0" : : "g"(p->registers.EDI)); // nwo tutaj to wiadomo co się dzieje
+    asm("push %0" : : "g"(p->registers.EDI)); // to zjada popa
 
     //printf("Rejestry:\n");
     //printf("ESP: %H    EFLAGS: %H    CS: %H    EIP: %H\n",p->registers.ESP,p->registers.EFLAGS,p->registers.CS,p->registers.EIP);
@@ -165,8 +134,13 @@ void kill_process(struct process* p)
 {
     p->state=dead;
 
-    memset(p->stack,0,STACK_SIZE);
-    p->state=free;
+    //memset(p->stack,0,STACK_SIZE);
+    //p->state=free;
+}
+
+void kill_process_nr(int index)
+{
+    kill_process(processes+index);
 }
 
 void process_revolver(struct regs *r)
@@ -185,7 +159,8 @@ void process_revolver(struct regs *r)
 
     //printf("%d ",current_process);
     current_process++;
-    if (current_process>=MAX_PROCESSES) current_process=0;
+    if (current_process>=MAX_PROCESSES)
+        current_process=0;
     
     struct process* p;
     int legit=0;
@@ -222,24 +197,33 @@ void print_processes()
     {
         if (processes[i].state==free)
             continue;
-        printf("Nr. %d >> name: %s, age: %d,   status:",i,processes[i].name,time_ticks-processes[i].time_created);
+        printf("ID: %d >> name: %s, age: %d, status:",i,processes[i].name,time_ticks-processes[i].time_created);
         switch (processes[i].state)
         {
         case ready:
-            printf("READY\n");
+            terminal_writestring_c("READY\n",VGA_COLOR_GREEN);
             break;
         case running:
-            printf("RUNNING\n");
+            terminal_writestring_c("RUNNING\n",VGA_COLOR_LIGHT_GREEN);
             break;
         case new:
-            printf("NEW\n");
+            terminal_writestring_c("NEW\n",VGA_COLOR_LIGHT_BLUE);
             break;
         case dead:
-            printf("DEAD\n");
+            terminal_writestring_c("DEAD\n",VGA_COLOR_RED);
             break;
         
         default:
             break;
         }
     }
+}
+
+void process_end() // najlepiej wrzucić to na koniec każdego procesu
+{
+    kill_process_nr(current_process);
+    asm("push %0" : : "g"(&stack_top));
+    asm("pop %esp");
+    while(1)
+        asm("hlt");
 }

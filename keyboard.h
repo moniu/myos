@@ -26,6 +26,7 @@ struct keyboard_queue_t
     int start;
     int end;
     int size;
+    uint8_t full;
 };
 
 void keyboard_setup();

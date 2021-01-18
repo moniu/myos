@@ -15,7 +15,7 @@ void art_drawcolors(char* src)
                 terminal_writestring_c("#",VGA_COLOR_LIGHT_GREEN);
                 break;
             case 'H':
-                terminal_writestring_c("#",VGA_COLOR_LIGHT_GREY);
+                terminal_writestring_c("#",VGA_COLOR_WHITE);
                 break;
             case 'h':
                 terminal_writestring_c("#",VGA_COLOR_DARK_GREY);
@@ -49,49 +49,6 @@ void art_drawcolors(char* src)
 }
 
 void art_pepe(void)
-{
-    art_drawcolors("          gggggggg     gggggg\n");
-    art_drawcolors("         gGGGGGGGGgg ggGGGGGGg\n");
-    art_drawcolors("        gGGGGGGGGGGGgGGGGGGGGGg\n");
-    art_drawcolors("       gGGGGGGGgggGGGgGGGGGGGGGg\n");
-    art_drawcolors("       gGGGGgggGGGgggGgGGGggggGg\n");
-    art_drawcolors("      gGGGggGGGGGGGGgggGggGGGGgg\n");
-    art_drawcolors("     gGGGGGGGGGGGGGGGGGgGGGGGGGGggg\n");
-    art_drawcolors("    gGGGGGGGGGGGGGggggggGGGGGggggGGg\n");
-    art_drawcolors("    gGGGGGGGGGgggggGGGggggGGggGGggGGg\n");
-    art_drawcolors("   ggGGGGGGGgggGGGGGGGGGGgGGGGGGGGggg\n");
-    art_drawcolors("  gGGGGGGGGGGGGGGgggggggggGGggggggggg\n");
-    art_drawcolors(" gGGGGGGGGGGhhhhh hhhhHHHhhhhHhhhhhHHHh\n");
-    art_drawcolors(" gGGGGGGGGGGhHHHHHHhHhhhHHhHHHHHhhhHhHHHh\n");
-    art_drawcolors("gGGGGGGGGGGGGhHHHhhhhHhhhhHHHHhhhhhhhgg\n");
-    art_drawcolors("GGGGGGGGGGGGGgggggggggGGGggggggggGGGg\n");
-    art_drawcolors("GGGGGGGGGGGGGGGGgGGGGGgGGGGGGGGGGGGg\n");
-    art_drawcolors("GGGGGGGGGGGGGGGGGGGGggGGGGgGGGGGGgg\n");
-    art_drawcolors("GGGGGGGGGGGGGGGGGGggGGGGGGGggggggg\n");
-    art_drawcolors("GGGGGGGGGGGGGGGGggGGGGGGGGGGgGGGGGg\n");
-    art_drawcolors("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGg\n");
-    art_drawcolors("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGg\n");
-    art_drawcolors("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGg\n");
-    art_drawcolors("GGGGGGGGGGGrrrrrrrrrGGGGGGGGGGGGGGrr\n");
-    art_drawcolors("GGGGGGGGGGrRRRRRRRRrrrrrrrrrrrrrrrRRr\n");
-    art_drawcolors("GGGGGGGGGrRRrrrrrrrRRRRRRRRRRRRRRRRRr\n");
-    art_drawcolors("GGGGGGGGGrRRRRRRRRRrrrrrrrrrrrrrrrrr\n");
-    art_drawcolors("GGGGGGGGGGrrrrrrrrRRRRRRRRRRRRRRRRRRr\n");
-    art_drawcolors("GGGGGGGGGGGGGGGGGGrrrrrrrrrrrrrrrrrr\n");
-    art_drawcolors("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGg\n");
-    art_drawcolors("bbGGGGGGGGGGGGGGGGGGGGGGGGGGGgg\n");
-    art_drawcolors("BbbGGGGGGGGGGGGGGGGGGGGGGGGgg\n");
-    art_drawcolors("BBBbbbGGGGGGGGGGGGGGGGGGGGg\n");
-    art_drawcolors("BBBBBBbbbGGGGGGGGGGGGGGGgg\n");
-    art_drawcolors("BBBBBBBBBbbbbbbbbbbbbbbbBBb\n");
-    art_drawcolors("BBBBBBBBBBBBBBBBBBBBBBBBBBBbb\n");
-    art_drawcolors("BBBBBBBBBBBBBBBBBBBBBBBBBBBBb\n");
-    art_drawcolors("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBb\n");
-    // a psia kość za wysoki
-    // feels bad
-}
-
-void art_pepe2(void)
 {
     terminal_newline();
     art_drawcolors("    gggg gggg\n");

@@ -23,7 +23,7 @@ struct idt_idtr {
 #pragma pack(pop)
 
 
-
+extern struct idt_gate idt[256];
 
 
 void idt_make_entry(struct idt_gate *idt, uint32_t offset, uint16_t selector, uint8_t type_attr);
